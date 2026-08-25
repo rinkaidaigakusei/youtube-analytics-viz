@@ -105,7 +105,28 @@ npm run dev
 | POST | `/api/sync/analytics?force=false` | 各動画のAnalyticsデータを取得しキャッシュ(`force=true`で再取得) |
 | GET | `/api/summary/weekday-hour` | 曜日×時間帯ごとの集計(初速・累計再生数・視聴維持率) |
 
+## デプロイ
+
+### フロントエンド → GitHub Pages
+
+1. リポジトリの Settings > Pages で、Source を「**GitHub Actions**」に設定
+2. Settings > Secrets and variables > Actions > **Variables** タブで `VITE_API_BASE_URL` を追加し、デプロイ済みバックエンドのURLを設定(例: `https://youtube-analytics-viz-backend.onrender.com`)
+3. `main`ブランチに`frontend/`配下の変更をpushすると、[.github/workflows/deploy-frontend.yml](.github/workflows/deploy-frontend.yml)が自動でビルド・公開する(`https://<GitHubユーザー名>.github.io/youtube-analytics-viz/`)
+
+### バックエンド → Render
+
+[render.yaml](render.yaml) を使ったBlueprintデプロイに対応しています。
+
+1. Renderで「New +」→「Blueprint」→ このリポジトリを選択
+2. 環境変数(`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` / `FRONTEND_ORIGIN`)を入力
+   - `GOOGLE_REDIRECT_URI`: `https://<デプロイ先のURL>/auth/callback`
+   - `FRONTEND_ORIGIN`: `https://<GitHubユーザー名>.github.io`(GitHub Pagesのオリジン。ローカルも試すなら`http://localhost:5173,https://<GitHubユーザー名>.github.io`のようにカンマ区切りで併記)
+3. Google Cloud Console の OAuthクライアント設定で「承認済みのリダイレクトURI」に本番の`GOOGLE_REDIRECT_URI`を追加
+4. デプロイ後、ブラウザで `https://<デプロイ先のURL>/auth/login` にアクセスして一度だけログインしておく
+
+**注意(無料プランの制約)**: Renderの無料プランはディスクが永続化されないため、再デプロイのたびに`token.json`(認証情報)と`cache.db`(キャッシュ)が消え、再ログイン・再同期が必要になる。個人利用でたまにしか再デプロイしないなら実用上問題ないが、頻繁に再デプロイする場合はRenderの永続ディスク(有料)を検討すること。**Vercelのサーバーレス関数はリクエストごとにファイルシステムがリセットされるため、このアプリのファイルベースのトークン/キャッシュ保存方式とは相性が悪く非推奨。**
+
 ## 今後のTODO
 
-- [ ] フロントエンド(ヒートマップ・動画一覧テーブル)の実装
-- [ ] GitHub Pages / Vercel・Render へのデプロイ手順整備
+- [x] フロントエンド(ヒートマップ・動画一覧テーブル)の実装
+- [x] GitHub Pages / Render へのデプロイ手順整備
