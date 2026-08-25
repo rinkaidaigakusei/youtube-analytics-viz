@@ -1,0 +1,28 @@
+# --- Python (backend) ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# --- Env / secrets ---
+.env
+backend/.env
+*.env.local
+
+# --- Local cache & OAuth tokens (never commit) ---
+backend/data/*.db
+backend/data/*.json
+!backend/data/.gitkeep
+
+# --- Node (frontend) ---
+node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/node_modules/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
