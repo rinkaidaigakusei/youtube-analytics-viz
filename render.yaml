@@ -15,5 +15,7 @@ services:
         sync: false
       - key: FRONTEND_ORIGIN
         sync: false
+      - key: POST_LOGIN_REDIRECT_URL
+        sync: false
       - key: TIMEZONE
         value: Asia/Tokyo

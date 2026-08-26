@@ -65,7 +65,7 @@ def callback(code: str, state: str):
     flow.fetch_token(code=code)
     creds = flow.credentials
     _token_path().write_text(creds.to_json(), encoding="utf-8")
-    return RedirectResponse(settings.frontend_origin)
+    return RedirectResponse(settings.post_login_redirect_url)
 
 
 @router.get("/status")
