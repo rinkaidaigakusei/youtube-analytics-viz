@@ -27,3 +27,13 @@ def list_videos():
             """
         ).fetchall()
         return [dict(r) for r in rows]
+
+
+@router.get("/videos/{video_id}/daily-views")
+def video_daily_views(video_id: str):
+    with get_db() as conn:
+        rows = conn.execute(
+            "SELECT day_index, date, views FROM daily_views WHERE video_id = ? ORDER BY day_index",
+            (video_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]

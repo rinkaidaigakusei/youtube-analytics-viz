@@ -49,7 +49,8 @@ def sync_analytics_for_video(creds: Credentials, video_id: str, published_at: st
         if existing:
             return False
 
-    daily = youtube_analytics.get_daily_views(creds, video_id, published_at, days=2)
+    # 初速(day_index<=1)だけでなく、公開後の再生数推移グラフにも使うため長めに取得する
+    daily = youtube_analytics.get_daily_views(creds, video_id, published_at, days=29)
     stats = youtube_analytics.get_video_stats(creds, video_id, published_at)
     now = datetime.now(timezone.utc).isoformat()
 

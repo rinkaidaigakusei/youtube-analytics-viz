@@ -296,3 +296,88 @@
 .video-table a {
   color: var(--text-h);
 }
+
+/* --- Best times ranking --- */
+.best-times {
+  margin-top: 20px;
+}
+
+.best-times h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+.best-times-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.best-times-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--code-bg);
+  font-size: 14px;
+}
+
+.best-times-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent-bg);
+  color: var(--text-h);
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.best-times-slot {
+  font-weight: 600;
+  color: var(--text-h);
+  min-width: 90px;
+}
+
+.best-times-value {
+  color: var(--text-h);
+}
+
+.best-times-count {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.best-times-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+/* --- Growth chart --- */
+.growth-chart h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+.growth-chart-select {
+  width: 100%;
+  max-width: 640px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 14px;
+  margin-bottom: 12px;
+}

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import { api } from "./api";
+import BestTimesRanking from "./components/BestTimesRanking";
 import CommentsPanel from "./components/CommentsPanel";
 import FormatCharts from "./components/FormatCharts";
+import GrowthChart from "./components/GrowthChart";
 import Heatmap, { METRICS } from "./components/Heatmap";
 import SyncBar from "./components/SyncBar";
 import VideoTable from "./components/VideoTable";
@@ -78,7 +80,10 @@ export default function App() {
 
           <section>
             {summary.length > 0 ? (
-              <Heatmap data={summary} metric={metric} />
+              <>
+                <Heatmap data={summary} metric={metric} />
+                <BestTimesRanking summary={summary} />
+              </>
             ) : (
               <p>まだデータがありません。「動画・Analyticsを同期」を実行してください。</p>
             )}
@@ -87,6 +92,11 @@ export default function App() {
           <section>
             <h2>フォーマット別再生数</h2>
             <FormatCharts videos={videos} />
+          </section>
+
+          <section>
+            <h2>再生数の推移</h2>
+            {videos.length > 0 && <GrowthChart videos={videos} />}
           </section>
 
           <section>

@@ -14,6 +14,7 @@ export const api = {
   loginUrl: `${API_BASE_URL}/auth/login`,
   authStatus: () => request("/auth/status"),
   videos: () => request("/api/videos"),
+  dailyViews: (videoId) => request(`/api/videos/${videoId}/daily-views`),
   weekdayHourSummary: () => request("/api/summary/weekday-hour"),
   syncVideos: () => request("/api/sync/videos", { method: "POST" }),
   syncAnalytics: (force = false) =>
