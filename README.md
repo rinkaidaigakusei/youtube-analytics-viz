@@ -3,6 +3,8 @@
 自分のYouTubeチャンネルの動画を対象に、**投稿曜日・時間帯ごとの初速(公開後24〜48時間の再生数)や視聴維持率**を集計・可視化するツールです。
 
 - 曜日 × 時間帯のヒートマップで「伸びやすい投稿タイミング」を一目で確認
+- Shorts / 横動画をフォーマット別に分けた再生数グラフ
+- 未返信コメントの一覧表示・アプリ上からの返信投稿
 - 動画一覧を公開日時でソート/フィルタできるテーブル
 - 取得したデータはローカル(SQLite)にキャッシュし、APIクォータを節約
 
@@ -32,6 +34,7 @@ youtube-analytics-viz/
    - スコープに以下を追加
      - `https://www.googleapis.com/auth/youtube.readonly`
      - `https://www.googleapis.com/auth/yt-analytics.readonly`
+     - `https://www.googleapis.com/auth/youtube.force-ssl`(コメント取得・返信に必要。読み取り専用の代替スコープは無い)
    - テストユーザーに自分のGoogleアカウント(対象チャンネルのオーナー)を追加
    - Publishing statusは **Testing** のままでOK(個人利用のため審査不要)
 4. 「APIとサービス」→「認証情報」→「認証情報を作成」→「OAuthクライアントID」
@@ -104,6 +107,9 @@ npm run dev
 | GET | `/api/videos` | キャッシュ済み動画一覧を返す |
 | POST | `/api/sync/analytics?force=false` | 各動画のAnalyticsデータを取得しキャッシュ(`force=true`で再取得) |
 | GET | `/api/summary/weekday-hour` | 曜日×時間帯ごとの集計(初速・累計再生数・視聴維持率) |
+| POST | `/api/sync/comments` | 全動画のコメントを取得しキャッシュ |
+| GET | `/api/comments?unreplied_only=true` | 未返信コメント一覧(デフォルトで未返信のみ) |
+| POST | `/api/comments/{comment_id}/reply` | 指定コメントへ返信を投稿(body: `{"text": "..."}`) |
 
 ## デプロイ
 

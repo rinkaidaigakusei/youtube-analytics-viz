@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import { api } from "./api";
+import CommentsPanel from "./components/CommentsPanel";
+import FormatCharts from "./components/FormatCharts";
 import Heatmap, { METRICS } from "./components/Heatmap";
 import SyncBar from "./components/SyncBar";
 import VideoTable from "./components/VideoTable";
@@ -9,6 +11,7 @@ export default function App() {
   const [authenticated, setAuthenticated] = useState(false);
   const [videos, setVideos] = useState([]);
   const [summary, setSummary] = useState([]);
+  const [comments, setComments] = useState([]);
   const [metric, setMetric] = useState("avg_early_views");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,9 +21,14 @@ export default function App() {
       const status = await api.authStatus();
       setAuthenticated(status.authenticated);
       if (status.authenticated) {
-        const [videoList, summaryList] = await Promise.all([api.videos(), api.weekdayHourSummary()]);
+        const [videoList, summaryList, commentList] = await Promise.all([
+          api.videos(),
+          api.weekdayHourSummary(),
+          api.unrepliedComments(),
+        ]);
         setVideos(videoList);
         setSummary(summaryList);
+        setComments(commentList);
       }
       setError(null);
     } catch (err) {
@@ -28,6 +36,14 @@ export default function App() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const loadComments = useCallback(async () => {
+    setComments(await api.unrepliedComments());
+  }, []);
+
+  const handleCommentReplied = useCallback((commentId) => {
+    setComments((prev) => prev.filter((c) => c.comment_id !== commentId));
   }, []);
 
   useEffect(() => {
@@ -66,6 +82,15 @@ export default function App() {
             ) : (
               <p>まだデータがありません。「動画・Analyticsを同期」を実行してください。</p>
             )}
+          </section>
+
+          <section>
+            <h2>フォーマット別再生数</h2>
+            <FormatCharts videos={videos} />
+          </section>
+
+          <section>
+            <CommentsPanel comments={comments} onSynced={loadComments} onCommentReplied={handleCommentReplied} />
           </section>
 
           <section>

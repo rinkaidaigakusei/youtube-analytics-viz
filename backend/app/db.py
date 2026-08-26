@@ -11,7 +11,22 @@ CREATE TABLE IF NOT EXISTS videos (
     published_at TEXT NOT NULL,
     duration_seconds INTEGER,
     thumbnail_url TEXT,
+    is_short INTEGER,
     fetched_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+    comment_id TEXT PRIMARY KEY,
+    video_id TEXT NOT NULL,
+    video_title TEXT,
+    author_display_name TEXT,
+    text TEXT,
+    published_at TEXT,
+    like_count INTEGER,
+    replied INTEGER NOT NULL DEFAULT 0,
+    comments_disabled INTEGER NOT NULL DEFAULT 0,
+    fetched_at TEXT NOT NULL,
+    FOREIGN KEY (video_id) REFERENCES videos(video_id)
 );
 
 CREATE TABLE IF NOT EXISTS daily_views (
@@ -55,3 +70,7 @@ def get_db():
 def init_db() -> None:
     with get_db() as conn:
         conn.executescript(SCHEMA)
+        # 既存DBに対する簡易マイグレーション(is_shortカラムが無い場合のみ追加)
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(videos)")}
+        if "is_short" not in columns:
+            conn.execute("ALTER TABLE videos ADD COLUMN is_short INTEGER")

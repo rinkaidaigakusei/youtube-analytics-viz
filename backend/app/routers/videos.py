@@ -19,7 +19,7 @@ def list_videos():
     with get_db() as conn:
         rows = conn.execute(
             """
-            SELECT v.video_id, v.title, v.published_at, v.duration_seconds, v.thumbnail_url,
+            SELECT v.video_id, v.title, v.published_at, v.duration_seconds, v.thumbnail_url, v.is_short,
                    s.lifetime_views, s.average_view_percentage
             FROM videos v
             LEFT JOIN video_stats s ON s.video_id = v.video_id

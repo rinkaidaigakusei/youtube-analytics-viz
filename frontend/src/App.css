@@ -212,6 +212,87 @@
   background: var(--row-hover);
 }
 
+/* --- Format charts (Shorts / landscape) --- */
+.format-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 24px;
+}
+
+.format-chart-block h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+/* --- Comments panel --- */
+.comments-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.comments-panel-header h2 {
+  margin: 0;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.comment-row {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: var(--code-bg);
+}
+
+.comment-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.comment-video-title {
+  color: var(--text);
+}
+
+.comment-text {
+  margin: 0 0 12px;
+  white-space: pre-wrap;
+  color: var(--text-h);
+}
+
+.comment-reply-form {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.comment-reply-form textarea {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  font-family: var(--sans);
+  font-size: 14px;
+  resize: vertical;
+}
+
 .video-table a {
   color: var(--text-h);
 }

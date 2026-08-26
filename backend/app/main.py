@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .db import init_db
-from .routers import analytics, auth, videos
+from .routers import analytics, auth, comments, videos
 
 
 @asynccontextmanager
@@ -27,6 +27,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(videos.router)
 app.include_router(analytics.router)
+app.include_router(comments.router)
 
 
 @app.get("/")

@@ -18,4 +18,12 @@ export const api = {
   syncVideos: () => request("/api/sync/videos", { method: "POST" }),
   syncAnalytics: (force = false) =>
     request(`/api/sync/analytics?force=${force}`, { method: "POST" }),
+  syncComments: () => request("/api/sync/comments", { method: "POST" }),
+  unrepliedComments: () => request("/api/comments?unreplied_only=true"),
+  replyToComment: (commentId, text) =>
+    request(`/api/comments/${commentId}/reply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    }),
 };

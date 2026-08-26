@@ -13,6 +13,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 SCOPES = [
     "https://www.googleapis.com/auth/youtube.readonly",
     "https://www.googleapis.com/auth/yt-analytics.readonly",
+    # コメント一覧の取得(commentThreads.list)に必要。読み取り専用の代替スコープは無い。
+    "https://www.googleapis.com/auth/youtube.force-ssl",
 ]
 
 # PKCE code_verifier は authorization_url 発行時と token 交換時で同じ値が必要。

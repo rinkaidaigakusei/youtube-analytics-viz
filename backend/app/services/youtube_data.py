@@ -1,5 +1,20 @@
+import requests
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+
+
+def is_short_video(video_id: str) -> bool:
+    """YouTubeはShortsではない動画の /shorts/{id} URLを /watch?v={id} にリダイレクトする。
+    この挙動を使ってShorts判定する(API quotaを消費しない)。"""
+    try:
+        resp = requests.head(
+            f"https://www.youtube.com/shorts/{video_id}",
+            allow_redirects=False,
+            timeout=5,
+        )
+        return resp.status_code == 200
+    except requests.RequestException:
+        return False
 
 
 def _get_uploads_playlist_id(youtube) -> str:
@@ -42,6 +57,7 @@ def list_all_videos(creds: Credentials) -> list[dict]:
                     "published_at": item["snippet"]["publishedAt"],
                     "duration": item["contentDetails"]["duration"],
                     "thumbnail_url": thumb.get("url"),
+                    "is_short": is_short_video(item["id"]),
                 }
             )
     return videos
