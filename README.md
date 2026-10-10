@@ -6,6 +6,7 @@
 - Shorts / 横動画をフォーマット別に分けた再生数グラフ
 - 未返信コメントの一覧表示・アプリ上からの返信投稿
 - 動画一覧を公開日時でソート/フィルタできるテーブル
+- 公開後24時間の再生数を動画どうしで比較できる折れ線グラフ(20分おきに自動記録)
 - 取得したデータはローカル(SQLite)にキャッシュし、APIクォータを節約
 
 ## 構成
@@ -15,6 +16,7 @@
 ```
 youtube-analytics-viz/
 ├── backend/    # FastAPI: OAuth認証 + YouTube Data/Analytics API呼び出し + SQLiteキャッシュ
+├── collector/  # 公開後24時間の再生数を記録するスクリプト(GitHub Actionsが定期実行)
 └── frontend/   # React (Vite): ヒートマップ・動画一覧テーブルの表示(GitHub Pages等で静的配信)
 ```
 
@@ -90,6 +92,24 @@ cd frontend
 npm install
 npm run dev
 ```
+
+## 公開後24時間の再生数比較
+
+YouTube Analytics APIは日別の値しか返さないため、公開直後の時間単位の伸びは「その時点の再生数」を定期的に記録して作っています。
+
+- [.github/workflows/collect-snapshots.yml](.github/workflows/collect-snapshots.yml) が20分おきに [collector/collect_snapshots.py](collector/collect_snapshots.py) を実行し、公開から24時間以内の動画の再生数を `data` ブランチの `snapshots.json` に追記する(対象の動画が無いときは何もコミットしない)
+- フロントエンドはその `snapshots.json` を直接読み込んでグラフにする(バックエンドは経由しない)
+- **記録を始める前に投稿した動画は、時間単位のデータが存在しないため表示できない**
+
+### セットアップ(最初に1回だけ)
+
+1. Google Cloud Console の「APIとサービス」→「認証情報」→「認証情報を作成」→「**APIキー**」でキーを発行する(「APIの制限」で YouTube Data API v3 のみに絞るのがおすすめ)
+2. GitHubリポジトリの Settings > Secrets and variables > Actions > **Secrets** タブで `YT_API_KEY` という名前で登録する
+3. Actions タブ > 「Collect first-24h view snapshots」> 「Run workflow」で一度手動実行し、成功すること(`data` ブランチができること)を確認する
+
+別のチャンネルで使う場合は、ワークフロー内の `YT_CHANNEL_ID` を書き換える。
+
+**注意**: GitHubの仕様で、リポジトリに60日間動きが無いと定期実行が自動で止まる(GitHubからメールが届く)。止まった場合は Actions タブから再度有効化する。
 
 ## 環境変数・秘密情報の扱い
 

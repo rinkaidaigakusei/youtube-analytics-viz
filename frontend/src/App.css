@@ -381,3 +381,135 @@
   font-size: 14px;
   margin-bottom: 12px;
 }
+
+/* --- First 24h comparison chart --- */
+.first-day {
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #4a3aa7;
+  --series-8: #e34948;
+  --fd-context: #c3c2b7;
+  --fd-grid: #e1e0d9;
+  --fd-axis: #c3c2b7;
+  --fd-muted: #898781;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .first-day {
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+    --fd-context: #4a4b55;
+    --fd-grid: #2e303a;
+    --fd-axis: #3d3f4a;
+  }
+}
+
+.first-day-empty,
+.first-day-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.first-day-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.first-day-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.first-day-chip.selected {
+  background: var(--code-bg);
+  color: var(--text-h);
+}
+
+.first-day-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.first-day-chip-title {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.first-day-chip-date {
+  color: var(--text);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.first-day-key {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.first-day-tooltip {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  max-width: 360px;
+}
+
+.first-day-tooltip-label {
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.first-day-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-h);
+}
+
+.first-day-tooltip-title {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.first-day-table td .first-day-key {
+  margin-right: 8px;
+}
+
+.first-day-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

@@ -3,6 +3,7 @@ import "./App.css";
 import { api } from "./api";
 import BestTimesRanking from "./components/BestTimesRanking";
 import CommentsPanel from "./components/CommentsPanel";
+import FirstDayChart from "./components/FirstDayChart";
 import FormatCharts from "./components/FormatCharts";
 import GrowthChart from "./components/GrowthChart";
 import Heatmap, { METRICS } from "./components/Heatmap";
@@ -60,6 +61,12 @@ export default function App() {
       </header>
 
       <SyncBar authenticated={authenticated} onSynced={loadData} />
+
+      {/* 公開情報の記録だけで描けるので、バックエンドの認証・起動を待たずに表示する */}
+      <section>
+        <h2>公開後24時間の再生数比較</h2>
+        <FirstDayChart />
+      </section>
 
       {error && <p className="error-banner">エラー: {error}</p>}
       {loading && <p>読み込み中...</p>}
