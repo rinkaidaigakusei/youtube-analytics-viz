@@ -32,10 +32,18 @@ def storage_ok() -> bool | None:
     return _last_ok if enabled() else None
 
 
+def _connection_string() -> str:
+    """Neonの画面は `psql 'postgresql://...'` の形でコピーさせることがあるので、URLの部分だけを取り出す"""
+    url = settings.database_url.strip()
+    if url.startswith("psql"):
+        url = url[len("psql") :].strip()
+    return url.strip("'\"")
+
+
 def _connect():
     import psycopg  # DATABASE_URL を使うときだけ必要
 
-    conn = psycopg.connect(settings.database_url, connect_timeout=15)
+    conn = psycopg.connect(_connection_string(), connect_timeout=15)
     conn.execute(
         "CREATE TABLE IF NOT EXISTS app_files ("
         "name TEXT PRIMARY KEY, content BYTEA NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT now())"
