@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api } from "../api";
+import SeriesTooltip from "./ChartTooltip";
 import SeriesChips, { formatPublished, seriesColor, useSeriesSlots } from "./SeriesChips";
 
 const DEFAULT_SELECTED = 5;
@@ -34,30 +35,9 @@ function toCumulativeHours(video) {
   return cumulative;
 }
 
-function ChartTooltip({ active, label, payload, selected }) {
-  if (!active || !payload) return null;
-  const rows = selected
-    .map(({ video, slot }) => ({ video, slot, value: payload.find((p) => p.dataKey === video.video_id)?.value }))
-    .filter((r) => r.value !== null && r.value !== undefined)
-    .sort((a, b) => b.value - a.value);
-  if (rows.length === 0) return null;
-
-  return (
-    <div className="chart-tooltip">
-      <div className="chart-tooltip-label">{label === 0 ? "公開日" : `公開から${label}日目`}までの累計</div>
-      {rows.map(({ video, slot, value }) => (
-        <div key={video.video_id} className="chart-tooltip-row">
-          <span className="series-key" style={{ background: seriesColor(slot) }} />
-          <strong>{formatHours(value)}</strong>
-          <span className="chart-tooltip-title">{video.title}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export default function WatchTimeChart({ videos: syncedVideos }) {
-  const [videos, setVideos] = useState(null);
+export default function WatchTimeChart({ videos: syncedVideos, matchesFilter }) {
+  // 再生時間のある横動画すべて(null = 読み込み中)
+  const [allVideos, setAllVideos] = useState(null);
   const [error, setError] = useState(null);
   const [range, setRange] = useState(30);
   const { slots, selectFirst, toggle } = useSeriesSlots();
@@ -67,16 +47,19 @@ export default function WatchTimeChart({ videos: syncedVideos }) {
     api
       .watchTime()
       .then((list) => {
-        const landscape = list.filter((v) => !v.is_short && v.days.length > 0);
-        setVideos(landscape);
-        selectFirst(
-          landscape.map((v) => v.video_id),
-          DEFAULT_SELECTED
-        );
+        setAllVideos(list.filter((v) => !v.is_short && v.days.length > 0));
         setError(null);
       })
       .catch((err) => setError(err.message));
-  }, [syncedVideos, selectFirst]);
+  }, [syncedVideos]);
+
+  const videos = useMemo(() => allVideos?.filter(matchesFilter) ?? null, [allVideos, matchesFilter]);
+
+  // 読み込み直後と、絞り込みで顔ぶれが変わったときは、新しい順に選び直す
+  const idsKey = (videos ?? []).map((v) => v.video_id).join(",");
+  useEffect(() => {
+    selectFirst(idsKey ? idsKey.split(",") : [], DEFAULT_SELECTED);
+  }, [idsKey, selectFirst]);
 
   const prepared = useMemo(
     () => (videos ?? []).map((video) => ({ video, cumulative: toCumulativeHours(video) })),
@@ -102,6 +85,9 @@ export default function WatchTimeChart({ videos: syncedVideos }) {
 
   if (error) return <p className="error-banner">再生時間を読み込めませんでした: {error}</p>;
   if (videos === null) return <p>読み込み中...</p>;
+  if (videos.length === 0 && allVideos.length > 0) {
+    return <p className="series-hint">この条件に合う横動画はありません。</p>;
+  }
   if (videos.length === 0) {
     return (
       <p className="series-hint">再生時間のデータがまだありません。「動画・Analyticsを同期」を実行してください。</p>
@@ -143,7 +129,13 @@ export default function WatchTimeChart({ videos: syncedVideos }) {
               stroke="var(--chart-axis)"
             />
             <Tooltip
-              content={<ChartTooltip selected={selected} />}
+              content={
+                <SeriesTooltip
+                  selected={selected}
+                  formatLabel={(day) => `${day === 0 ? "公開日" : `公開から${day}日目`}までの累計`}
+                  formatValue={formatHours}
+                />
+              }
               cursor={{ stroke: "var(--chart-axis)", strokeWidth: 1 }}
               isAnimationActive={false}
             />

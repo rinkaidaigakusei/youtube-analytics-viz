@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "./App.css";
 import { api } from "./api";
 import BestTimesRanking from "./components/BestTimesRanking";
@@ -8,8 +8,10 @@ import FormatCharts from "./components/FormatCharts";
 import GrowthChart from "./components/GrowthChart";
 import Heatmap, { METRICS } from "./components/Heatmap";
 import SyncBar from "./components/SyncBar";
+import VideoFilter from "./components/VideoFilter";
 import VideoTable from "./components/VideoTable";
 import WatchTimeChart from "./components/WatchTimeChart";
+import { NO_FILTER, makeVideoFilter, yearMonthOptions } from "./videoFilter";
 
 export default function App() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -19,6 +21,10 @@ export default function App() {
   const [metric, setMetric] = useState("avg_early_views");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // 公開後24時間の記録(null = 読み込み中)。バックエンドとは別の場所から読む
+  const [snapshotVideos, setSnapshotVideos] = useState(null);
+  const [snapshotError, setSnapshotError] = useState(null);
+  const [filter, setFilter] = useState(NO_FILTER);
 
   const loadData = useCallback(async () => {
     try {
@@ -54,6 +60,24 @@ export default function App() {
     loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    api
+      .firstDaySnapshots()
+      .then((data) => setSnapshotVideos((data?.videos ?? []).filter((v) => v.points.length > 0)))
+      .catch((err) => setSnapshotError(err.message));
+  }, []);
+
+  const matchesFilter = useMemo(() => makeVideoFilter(filter), [filter]);
+  const filteredVideos = useMemo(() => videos.filter(matchesFilter), [videos, matchesFilter]);
+  const filteredSnapshotVideos = useMemo(
+    () => snapshotVideos?.filter(matchesFilter) ?? null,
+    [snapshotVideos, matchesFilter]
+  );
+  const yearMonths = useMemo(
+    () => yearMonthOptions([...videos, ...(snapshotVideos ?? [])]),
+    [videos, snapshotVideos]
+  );
+
   return (
     <div className="app">
       <header className="app-header">
@@ -63,10 +87,16 @@ export default function App() {
 
       <SyncBar authenticated={authenticated} onSynced={loadData} />
 
+      <VideoFilter filter={filter} onChange={setFilter} yearMonths={yearMonths} />
+
       {/* 公開情報の記録だけで描けるので、バックエンドの認証・起動を待たずに表示する */}
       <section>
         <h2>公開後24時間の再生数比較</h2>
-        <FirstDayChart />
+        <FirstDayChart
+          videos={filteredSnapshotVideos}
+          hasAnyVideo={(snapshotVideos?.length ?? 0) > 0}
+          error={snapshotError}
+        />
       </section>
 
       {error && <p className="error-banner">エラー: {error}</p>}
@@ -99,17 +129,22 @@ export default function App() {
 
           <section>
             <h2>フォーマット別再生数</h2>
-            <FormatCharts videos={videos} />
+            <FormatCharts videos={filteredVideos} />
           </section>
 
           <section>
             <h2>再生数の推移</h2>
-            {videos.length > 0 && <GrowthChart videos={videos} />}
+            {/* 絞り込みが変わったら選択中の動画を先頭に戻すため、作り直す */}
+            {filteredVideos.length > 0 ? (
+              <GrowthChart key={`${filter.period}/${filter.weekday}`} videos={filteredVideos} />
+            ) : (
+              <p>この条件に合う動画はありません。</p>
+            )}
           </section>
 
           <section>
             <h2>横動画の総再生時間比較</h2>
-            <WatchTimeChart videos={videos} />
+            <WatchTimeChart videos={videos} matchesFilter={matchesFilter} />
           </section>
 
           <section>
@@ -118,7 +153,7 @@ export default function App() {
 
           <section>
             <h2>動画一覧</h2>
-            <VideoTable videos={videos} />
+            <VideoTable videos={filteredVideos} />
           </section>
         </>
       )}

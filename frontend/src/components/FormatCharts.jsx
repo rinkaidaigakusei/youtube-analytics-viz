@@ -1,10 +1,25 @@
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useIsMobile } from "../useIsMobile";
+import { TooltipFrame } from "./ChartTooltip";
 
 const COLORS = { short: "#7f77dd", landscape: "#1d9e75" };
 
 function truncate(title, max = 28) {
   return title.length > max ? `${title.slice(0, max)}…` : title;
+}
+
+function BarPopup({ active, payload }) {
+  const bar = active ? payload?.[0]?.payload : null;
+  if (!bar) return null;
+  return (
+    <TooltipFrame stamp={bar.fullTitle}>
+      <div className="chart-tooltip-label">{bar.fullTitle}</div>
+      <div className="chart-tooltip-row">
+        <strong>{bar.views.toLocaleString()}</strong>
+        <span className="chart-tooltip-title">累計再生数</span>
+      </div>
+    </TooltipFrame>
+  );
 }
 
 function FormatBarChart({ videos, color }) {
@@ -34,6 +49,8 @@ function FormatBarChart({ videos, color }) {
           <XAxis type="number" tick={{ fontSize: 12 }} />
           <YAxis type="category" dataKey="title" width={isMobile ? 112 : 180} tick={{ fontSize: isMobile ? 11 : 12 }} />
           <Tooltip
+            // スマホは長いタイトルが横にはみ出すので、画面下のポップアップに出す
+            content={isMobile ? <BarPopup /> : undefined}
             formatter={(value) => [value.toLocaleString(), "累計再生数"]}
             labelFormatter={(_, payload) => payload?.[0]?.payload?.fullTitle ?? ""}
           />

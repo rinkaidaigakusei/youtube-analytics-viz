@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { api } from "../api";
+import SeriesTooltip from "./ChartTooltip";
 import SeriesChips, { formatPublished, seriesColor, useSeriesSlots } from "./SeriesChips";
 
 const DEFAULT_SELECTED = 5;
@@ -41,47 +41,16 @@ function matchesFormat(video, format) {
   return true;
 }
 
-function ChartTooltip({ active, label, payload, selected }) {
-  if (!active || !payload) return null;
-  const rows = selected
-    .map(({ video, slot }) => ({ video, slot, value: payload.find((p) => p.dataKey === video.video_id)?.value }))
-    .filter((r) => r.value !== null && r.value !== undefined)
-    .sort((a, b) => b.value - a.value);
-  if (rows.length === 0) return null;
-
-  return (
-    <div className="chart-tooltip">
-      <div className="chart-tooltip-label">公開から{formatHours(label)}</div>
-      {rows.map(({ video, slot, value }) => (
-        <div key={video.video_id} className="chart-tooltip-row">
-          <span className="series-key" style={{ background: seriesColor(slot) }} />
-          <strong>{value.toLocaleString()}</strong>
-          <span className="chart-tooltip-title">{video.title}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export default function FirstDayChart() {
-  const [videos, setVideos] = useState(null);
-  const [error, setError] = useState(null);
+/** videos: 絞り込み済みの記録(null = 読み込み中)。hasAnyVideo: 絞り込み前に1本でも記録があるか */
+export default function FirstDayChart({ videos, hasAnyVideo, error }) {
   const [format, setFormat] = useState("all");
   const { slots, selectFirst, toggle } = useSeriesSlots();
 
+  // 読み込み直後と、絞り込みで顔ぶれが変わったときは、新しい順に選び直す
+  const idsKey = (videos ?? []).map((v) => v.video_id).join(",");
   useEffect(() => {
-    api
-      .firstDaySnapshots()
-      .then((data) => {
-        const list = (data?.videos ?? []).filter((v) => v.points.length > 0);
-        setVideos(list);
-        selectFirst(
-          list.map((v) => v.video_id),
-          DEFAULT_SELECTED
-        );
-      })
-      .catch((err) => setError(err.message));
-  }, [selectFirst]);
+    selectFirst(idsKey ? idsKey.split(",") : [], DEFAULT_SELECTED);
+  }, [idsKey, selectFirst]);
 
   const prepared = useMemo(
     () => (videos ?? []).map((video) => ({ video, series: toSeries(video.points) })),
@@ -105,6 +74,9 @@ export default function FirstDayChart() {
 
   if (error) return <p className="error-banner">計測データを読み込めませんでした: {error}</p>;
   if (videos === null) return <p>読み込み中...</p>;
+  if (videos.length === 0 && hasAnyVideo) {
+    return <p className="series-hint">この条件に合う動画の記録はありません。</p>;
+  }
   if (videos.length === 0) {
     return (
       <p className="series-hint">
@@ -150,7 +122,13 @@ export default function FirstDayChart() {
               allowDecimals={false}
             />
             <Tooltip
-              content={<ChartTooltip selected={selected} />}
+              content={
+                <SeriesTooltip
+                  selected={selected}
+                  formatLabel={(h) => `公開から${formatHours(h)}`}
+                  formatValue={(v) => v.toLocaleString()}
+                />
+              }
               cursor={{ stroke: "var(--chart-axis)", strokeWidth: 1 }}
               isAnimationActive={false}
             />

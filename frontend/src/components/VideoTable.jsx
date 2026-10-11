@@ -18,7 +18,6 @@ function formatDate(iso) {
 export default function VideoTable({ videos }) {
   const [sortKey, setSortKey] = useState("published_at");
   const [sortDir, setSortDir] = useState("desc");
-  const [weekdayFilter, setWeekdayFilter] = useState("all");
 
   const rows = useMemo(() => {
     return videos.map((v) => {
@@ -27,13 +26,8 @@ export default function VideoTable({ videos }) {
     });
   }, [videos]);
 
-  const filtered = useMemo(() => {
-    if (weekdayFilter === "all") return rows;
-    return rows.filter((r) => r.weekday === Number(weekdayFilter));
-  }, [rows, weekdayFilter]);
-
   const sorted = useMemo(() => {
-    const copy = [...filtered];
+    const copy = [...rows];
     copy.sort((a, b) => {
       const av = a[sortKey];
       const bv = b[sortKey];
@@ -44,7 +38,7 @@ export default function VideoTable({ videos }) {
       return 0;
     });
     return copy;
-  }, [filtered, sortKey, sortDir]);
+  }, [rows, sortKey, sortDir]);
 
   function toggleSort(key) {
     if (sortKey === key) {
@@ -58,17 +52,6 @@ export default function VideoTable({ videos }) {
   return (
     <div className="video-table-wrap">
       <div className="video-table-controls">
-        <label>
-          曜日フィルタ:{" "}
-          <select value={weekdayFilter} onChange={(e) => setWeekdayFilter(e.target.value)}>
-            <option value="all">すべて</option>
-            {WEEKDAYS.map((label, i) => (
-              <option key={i} value={i}>
-                {label}曜日
-              </option>
-            ))}
-          </select>
-        </label>
         <label className="only-mobile">
           並び替え:{" "}
           <select
