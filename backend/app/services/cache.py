@@ -1,10 +1,14 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import isodate
 from google.oauth2.credentials import Credentials
 
 from ..db import get_db
 from . import youtube_analytics, youtube_comments, youtube_data
+
+
+# 再生数・再生時間は公開後も増え続けるので、これより古いキャッシュは取り直す
+ANALYTICS_CACHE_TTL = timedelta(hours=6)
 
 
 def _parse_duration_seconds(iso_duration: str) -> int:
@@ -42,27 +46,24 @@ def sync_videos(creds: Credentials) -> int:
 
 
 def sync_analytics_for_video(creds: Credentials, video_id: str, published_at: str, force: bool = False) -> bool:
-    """指定動画のAnalyticsデータを取得しキャッシュする。既にキャッシュ済みで force=False ならスキップ(APIクォータ節約)"""
+    """指定動画のAnalyticsデータを取得しキャッシュする。キャッシュが新しく force=False ならスキップ(APIクォータ節約)"""
     if not force:
         with get_db() as conn:
-            existing = conn.execute("SELECT 1 FROM video_stats WHERE video_id = ?", (video_id,)).fetchone()
-        if existing:
+            existing = conn.execute("SELECT fetched_at FROM video_stats WHERE video_id = ?", (video_id,)).fetchone()
+        if existing and datetime.now(timezone.utc) - datetime.fromisoformat(existing["fetched_at"]) < ANALYTICS_CACHE_TTL:
             return False
 
-    # 初速(day_index<=1)だけでなく、公開後の再生数推移グラフにも使うため長めに取得する
-    daily = youtube_analytics.get_daily_views(creds, video_id, published_at, days=29)
+    daily = youtube_analytics.get_daily_views(creds, video_id, published_at)
     stats = youtube_analytics.get_video_stats(creds, video_id, published_at)
     now = datetime.now(timezone.utc).isoformat()
 
     with get_db() as conn:
+        # day_index の振り方を変えた経緯があるため、古い行は消して入れ直す
+        conn.execute("DELETE FROM daily_views WHERE video_id = ?", (video_id,))
         for d in daily:
             conn.execute(
-                """
-                INSERT INTO daily_views (video_id, day_index, date, views)
-                VALUES (?, ?, ?, ?)
-                ON CONFLICT(video_id, day_index) DO UPDATE SET views = excluded.views
-                """,
-                (video_id, d["day_index"], d["date"], d["views"]),
+                "INSERT INTO daily_views (video_id, day_index, date, views, watch_minutes) VALUES (?, ?, ?, ?, ?)",
+                (video_id, d["day_index"], d["date"], d["views"], d["watch_minutes"]),
             )
         conn.execute(
             """

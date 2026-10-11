@@ -21,6 +21,7 @@ export const api = {
   videos: () => request("/api/videos"),
   dailyViews: (videoId) => request(`/api/videos/${videoId}/daily-views`),
   weekdayHourSummary: () => request("/api/summary/weekday-hour"),
+  watchTime: () => request("/api/summary/watch-time"),
   firstDaySnapshots: async () => {
     const res = await fetch(SNAPSHOTS_URL, { cache: "no-store" });
     if (res.status === 404) return null; // まだ一度も記録されていない

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api } from "../api";
+import SeriesChips, { formatPublished, seriesColor, useSeriesSlots } from "./SeriesChips";
 
-const MAX_SELECTED = 8;
 const DEFAULT_SELECTED = 5;
 const GRID_STEP_HOURS = 0.5;
 const MILESTONE_HOURS = [1, 3, 6, 12, 24];
@@ -11,16 +11,6 @@ const FORMATS = [
   { key: "short", label: "Shorts" },
   { key: "landscape", label: "横動画" },
 ];
-
-function formatPublished(iso) {
-  return new Date(iso).toLocaleString("ja-JP", {
-    timeZone: "Asia/Tokyo",
-    month: "numeric",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 function formatHours(h) {
   return Number.isInteger(h) ? `${h}時間` : `${Math.floor(h)}時間30分`;
@@ -60,13 +50,13 @@ function ChartTooltip({ active, label, payload, selected }) {
   if (rows.length === 0) return null;
 
   return (
-    <div className="first-day-tooltip">
-      <div className="first-day-tooltip-label">公開から{formatHours(label)}</div>
+    <div className="chart-tooltip">
+      <div className="chart-tooltip-label">公開から{formatHours(label)}</div>
       {rows.map(({ video, slot, value }) => (
-        <div key={video.video_id} className="first-day-tooltip-row">
-          <span className="first-day-key" style={{ background: `var(--series-${slot + 1})` }} />
+        <div key={video.video_id} className="chart-tooltip-row">
+          <span className="series-key" style={{ background: seriesColor(slot) }} />
           <strong>{value.toLocaleString()}</strong>
-          <span className="first-day-tooltip-title">{video.title}</span>
+          <span className="chart-tooltip-title">{video.title}</span>
         </div>
       ))}
     </div>
@@ -77,8 +67,7 @@ export default function FirstDayChart() {
   const [videos, setVideos] = useState(null);
   const [error, setError] = useState(null);
   const [format, setFormat] = useState("all");
-  // 色は動画に固定する(選択を外しても他の動画の色は変わらない): { video_id: 色番号 }
-  const [slots, setSlots] = useState({});
+  const { slots, selectFirst, toggle } = useSeriesSlots();
 
   useEffect(() => {
     api
@@ -86,10 +75,13 @@ export default function FirstDayChart() {
       .then((data) => {
         const list = (data?.videos ?? []).filter((v) => v.points.length > 0);
         setVideos(list);
-        setSlots(Object.fromEntries(list.slice(0, DEFAULT_SELECTED).map((v, i) => [v.video_id, i])));
+        selectFirst(
+          list.map((v) => v.video_id),
+          DEFAULT_SELECTED
+        );
       })
       .catch((err) => setError(err.message));
-  }, []);
+  }, [selectFirst]);
 
   const prepared = useMemo(
     () => (videos ?? []).map((video) => ({ video, series: toSeries(video.points) })),
@@ -111,33 +103,19 @@ export default function FirstDayChart() {
     return rows;
   }, [prepared]);
 
-  function toggle(videoId) {
-    setSlots((prev) => {
-      if (videoId in prev) {
-        const { [videoId]: _removed, ...rest } = prev;
-        return rest;
-      }
-      const used = new Set(Object.values(prev));
-      const free = [...Array(MAX_SELECTED).keys()].find((i) => !used.has(i));
-      return free === undefined ? prev : { ...prev, [videoId]: free };
-    });
-  }
-
   if (error) return <p className="error-banner">計測データを読み込めませんでした: {error}</p>;
   if (videos === null) return <p>読み込み中...</p>;
   if (videos.length === 0) {
     return (
-      <p className="first-day-empty">
+      <p className="series-hint">
         まだ計測した動画がありません。次に投稿した動画から、公開後24時間の再生数が20分おきに自動で記録されます
         (これより前に投稿した動画は、時間単位のデータが残っていないため表示できません)。
       </p>
     );
   }
 
-  const selectionFull = Object.keys(slots).length >= MAX_SELECTED;
-
   return (
-    <div className="first-day">
+    <div className="series-chart">
       <div className="metric-select">
         {FORMATS.map(({ key, label }) => (
           <button
@@ -150,55 +128,30 @@ export default function FirstDayChart() {
         ))}
       </div>
 
-      <div className="first-day-chips">
-        {visible.map(({ video }) => {
-          const slot = slots[video.video_id];
-          const isSelected = slot !== undefined;
-          return (
-            <button
-              key={video.video_id}
-              className={isSelected ? "first-day-chip selected" : "first-day-chip"}
-              onClick={() => toggle(video.video_id)}
-              disabled={!isSelected && selectionFull}
-              aria-pressed={isSelected}
-              title={video.title}
-            >
-              <span
-                className="first-day-key"
-                style={{ background: isSelected ? `var(--series-${slot + 1})` : "var(--fd-context)" }}
-              />
-              <span className="first-day-chip-title">{video.title}</span>
-              <span className="first-day-chip-date">{formatPublished(video.published_at)}</span>
-            </button>
-          );
-        })}
-      </div>
-      <p className="first-day-hint">
-        動画をクリックして比較対象を切り替えられます(最大{MAX_SELECTED}本)。選んでいない動画は灰色の細線で表示されます。
-      </p>
+      <SeriesChips videos={visible.map(({ video }) => video)} slots={slots} onToggle={toggle} />
 
       <div style={{ width: "100%", height: 340 }}>
         <ResponsiveContainer>
           <LineChart data={chartData} margin={{ left: 8, right: 24, top: 8, bottom: 8 }}>
-            <CartesianGrid stroke="var(--fd-grid)" vertical={false} />
+            <CartesianGrid stroke="var(--chart-grid)" vertical={false} />
             <XAxis
               dataKey="h"
               type="number"
               domain={[0, 24]}
               ticks={[0, 3, 6, 9, 12, 15, 18, 21, 24]}
               tickFormatter={(h) => `${h}h`}
-              tick={{ fontSize: 12, fill: "var(--fd-muted)" }}
-              stroke="var(--fd-axis)"
+              tick={{ fontSize: 12, fill: "var(--chart-muted)" }}
+              stroke="var(--chart-axis)"
             />
             <YAxis
               tickFormatter={(v) => v.toLocaleString()}
-              tick={{ fontSize: 12, fill: "var(--fd-muted)" }}
-              stroke="var(--fd-axis)"
+              tick={{ fontSize: 12, fill: "var(--chart-muted)" }}
+              stroke="var(--chart-axis)"
               allowDecimals={false}
             />
             <Tooltip
               content={<ChartTooltip selected={selected} />}
-              cursor={{ stroke: "var(--fd-axis)", strokeWidth: 1 }}
+              cursor={{ stroke: "var(--chart-axis)", strokeWidth: 1 }}
               isAnimationActive={false}
             />
             {context.map(({ video }) => (
@@ -206,7 +159,7 @@ export default function FirstDayChart() {
                 key={video.video_id}
                 dataKey={video.video_id}
                 type="linear"
-                stroke="var(--fd-context)"
+                stroke="var(--chart-context)"
                 strokeWidth={1}
                 dot={false}
                 activeDot={false}
@@ -218,7 +171,7 @@ export default function FirstDayChart() {
                 key={video.video_id}
                 dataKey={video.video_id}
                 type="linear"
-                stroke={`var(--series-${slot + 1})`}
+                stroke={seriesColor(slot)}
                 strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -233,7 +186,7 @@ export default function FirstDayChart() {
 
       {selected.length > 0 && (
         <div className="video-table-scroll">
-          <table className="video-table first-day-table">
+          <table className="video-table series-table">
             <thead>
               <tr>
                 <th>動画</th>
@@ -249,7 +202,7 @@ export default function FirstDayChart() {
               {selected.map(({ video, series, slot }) => (
                 <tr key={video.video_id}>
                   <td>
-                    <span className="first-day-key" style={{ background: `var(--series-${slot + 1})` }} />
+                    <span className="series-key" style={{ background: seriesColor(slot) }} />
                     <a href={`https://www.youtube.com/watch?v=${video.video_id}`} target="_blank" rel="noreferrer">
                       {video.title}
                     </a>

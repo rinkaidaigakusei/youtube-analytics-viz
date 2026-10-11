@@ -7,6 +7,7 @@
 - 未返信コメントの一覧表示・アプリ上からの返信投稿
 - 動画一覧を公開日時でソート/フィルタできるテーブル
 - 公開後24時間の再生数を動画どうしで比較できる折れ線グラフ(20分おきに自動記録)
+- 横動画の総再生時間(累計)を、公開からの日数で動画どうしで比較できる折れ線グラフ
 - 取得したデータはローカル(SQLite)にキャッシュし、APIクォータを節約
 
 ## 構成
@@ -125,8 +126,9 @@ YouTube Analytics APIは日別の値しか返さないため、公開直後の�
 | GET | `/auth/status` | 認証済みかどうか |
 | POST | `/api/sync/videos` | 動画一覧をYouTube Data APIから取得しキャッシュ |
 | GET | `/api/videos` | キャッシュ済み動画一覧を返す |
-| POST | `/api/sync/analytics?force=false` | 各動画のAnalyticsデータを取得しキャッシュ(`force=true`で再取得) |
+| POST | `/api/sync/analytics?force=false` | 各動画のAnalyticsデータ(日別の再生数・再生時間など)を取得しキャッシュ。6時間以内に取得済みの動画はスキップ(`force=true`で再取得) |
 | GET | `/api/summary/weekday-hour` | 曜日×時間帯ごとの集計(初速・累計再生数・視聴維持率) |
+| GET | `/api/summary/watch-time` | 動画ごとの日別再生時間(分)。総再生時間の比較グラフ用 |
 | POST | `/api/sync/comments` | 全動画のコメントを取得しキャッシュ |
 | GET | `/api/comments?unreplied_only=true` | 未返信コメント一覧(デフォルトで未返信のみ) |
 | POST | `/api/comments/{comment_id}/reply` | 指定コメントへ返信を投稿(body: `{"text": "..."}`) |

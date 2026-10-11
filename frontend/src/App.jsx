@@ -9,6 +9,7 @@ import GrowthChart from "./components/GrowthChart";
 import Heatmap, { METRICS } from "./components/Heatmap";
 import SyncBar from "./components/SyncBar";
 import VideoTable from "./components/VideoTable";
+import WatchTimeChart from "./components/WatchTimeChart";
 
 export default function App() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -104,6 +105,11 @@ export default function App() {
           <section>
             <h2>再生数の推移</h2>
             {videos.length > 0 && <GrowthChart videos={videos} />}
+          </section>
+
+          <section>
+            <h2>横動画の総再生時間比較</h2>
+            <WatchTimeChart videos={videos} />
           </section>
 
           <section>

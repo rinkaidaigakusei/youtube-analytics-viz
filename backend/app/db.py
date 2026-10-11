@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS daily_views (
     day_index INTEGER NOT NULL,
     date TEXT NOT NULL,
     views INTEGER NOT NULL,
+    watch_minutes INTEGER,
     PRIMARY KEY (video_id, day_index),
     FOREIGN KEY (video_id) REFERENCES videos(video_id)
 );
@@ -70,7 +71,10 @@ def get_db():
 def init_db() -> None:
     with get_db() as conn:
         conn.executescript(SCHEMA)
-        # 既存DBに対する簡易マイグレーション(is_shortカラムが無い場合のみ追加)
+        # 既存DBに対する簡易マイグレーション(後から足したカラムが無い場合のみ追加)
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(videos)")}
         if "is_short" not in columns:
             conn.execute("ALTER TABLE videos ADD COLUMN is_short INTEGER")
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(daily_views)")}
+        if "watch_minutes" not in columns:
+            conn.execute("ALTER TABLE daily_views ADD COLUMN watch_minutes INTEGER")

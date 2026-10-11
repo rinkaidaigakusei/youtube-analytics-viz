@@ -382,8 +382,8 @@
   margin-bottom: 12px;
 }
 
-/* --- First 24h comparison chart --- */
-.first-day {
+/* --- Per-video comparison line charts (first 24h views / watch time) --- */
+.series-chart {
   --series-1: #2a78d6;
   --series-2: #eb6834;
   --series-3: #1baf7a;
@@ -392,17 +392,17 @@
   --series-6: #008300;
   --series-7: #4a3aa7;
   --series-8: #e34948;
-  --fd-context: #c3c2b7;
-  --fd-grid: #e1e0d9;
-  --fd-axis: #c3c2b7;
-  --fd-muted: #898781;
+  --chart-context: #c3c2b7;
+  --chart-grid: #e1e0d9;
+  --chart-axis: #c3c2b7;
+  --chart-muted: #898781;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
 @media (prefers-color-scheme: dark) {
-  .first-day {
+  .series-chart {
     --series-1: #3987e5;
     --series-2: #d95926;
     --series-3: #199e70;
@@ -411,26 +411,25 @@
     --series-6: #008300;
     --series-7: #9085e9;
     --series-8: #e66767;
-    --fd-context: #4a4b55;
-    --fd-grid: #2e303a;
-    --fd-axis: #3d3f4a;
+    --chart-context: #4a4b55;
+    --chart-grid: #2e303a;
+    --chart-axis: #3d3f4a;
   }
 }
 
-.first-day-empty,
-.first-day-hint {
+.series-hint {
   margin: 0;
   font-size: 13px;
   color: var(--text);
 }
 
-.first-day-chips {
+.series-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.first-day-chip {
+.series-chip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -444,30 +443,30 @@
   cursor: pointer;
 }
 
-.first-day-chip.selected {
+.series-chip.selected {
   background: var(--code-bg);
   color: var(--text-h);
 }
 
-.first-day-chip:disabled {
+.series-chip:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.first-day-chip-title {
+.series-chip-title {
   max-width: 260px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.first-day-chip-date {
+.series-chip-date {
   color: var(--text);
   font-size: 12px;
   white-space: nowrap;
 }
 
-.first-day-key {
+.series-key {
   display: inline-block;
   width: 14px;
   height: 3px;
@@ -476,7 +475,7 @@
   vertical-align: middle;
 }
 
-.first-day-tooltip {
+.chart-tooltip {
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -486,30 +485,30 @@
   max-width: 360px;
 }
 
-.first-day-tooltip-label {
+.chart-tooltip-label {
   margin-bottom: 6px;
   color: var(--text);
 }
 
-.first-day-tooltip-row {
+.chart-tooltip-row {
   display: flex;
   align-items: center;
   gap: 8px;
   color: var(--text-h);
 }
 
-.first-day-tooltip-title {
+.chart-tooltip-title {
   color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.first-day-table td .first-day-key {
+.series-table td .series-key {
   margin-right: 8px;
 }
 
-.first-day-table .num {
+.series-table .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
