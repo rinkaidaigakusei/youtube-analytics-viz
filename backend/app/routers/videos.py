@@ -1,10 +1,17 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from ..db import get_db
+from ..security import require_app_key
 from ..services import cache
 from .auth import load_credentials
 
-router = APIRouter(prefix="/api", tags=["videos"])
+router = APIRouter(prefix="/api", tags=["videos"], dependencies=[Depends(require_app_key)])
+
+
+@router.get("/session")
+def session():
+    """合言葉が正しいかをフロントエンドが確かめるための入口"""
+    return {"ok": True}
 
 
 @router.post("/sync/videos")

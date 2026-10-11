@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "./App.css";
-import { api } from "./api";
+import { AppKeyError, api } from "./api";
+import AppKeyGate from "./components/AppKeyGate";
 import BestTimesRanking from "./components/BestTimesRanking";
 import CommentsPanel from "./components/CommentsPanel";
 import FirstDayChart from "./components/FirstDayChart";
@@ -21,13 +22,22 @@ export default function App() {
   const [metric, setMetric] = useState("avg_early_views");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // サーバーの合言葉が未入力・誤りのあいだは、入力欄だけを出す
+  const [locked, setLocked] = useState(!api.hasAppKey());
   // 公開後24時間の記録(null = 読み込み中)。バックエンドとは別の場所から読む
   const [snapshotVideos, setSnapshotVideos] = useState(null);
   const [snapshotError, setSnapshotError] = useState(null);
   const [filter, setFilter] = useState(NO_FILTER);
 
   const loadData = useCallback(async () => {
+    if (!api.hasAppKey()) {
+      setLocked(true);
+      setLoading(false);
+      return;
+    }
     try {
+      await api.checkAppKey();
+      setLocked(false);
       const status = await api.authStatus();
       setAuthenticated(status.authenticated);
       if (status.authenticated) {
@@ -42,7 +52,13 @@ export default function App() {
       }
       setError(null);
     } catch (err) {
-      setError(err.message);
+      if (err instanceof AppKeyError) {
+        // 保存してあった合言葉が通らなくなった(サーバー側で変えた等)ので、入れ直してもらう
+        api.setAppKey(null);
+        setLocked(true);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -85,7 +101,11 @@ export default function App() {
         <p className="subtitle">投稿曜日・時間帯ごとの初速と視聴維持率を可視化</p>
       </header>
 
-      <SyncBar authenticated={authenticated} onSynced={loadData} />
+      {locked ? (
+        <AppKeyGate onUnlocked={loadData} />
+      ) : (
+        <SyncBar authenticated={authenticated} onSynced={loadData} />
+      )}
 
       <VideoFilter filter={filter} onChange={setFilter} yearMonths={yearMonths} />
 
@@ -102,7 +122,7 @@ export default function App() {
       {error && <p className="error-banner">エラー: {error}</p>}
       {loading && <p>読み込み中...</p>}
 
-      {!loading && authenticated && (
+      {!loading && !locked && authenticated && (
         <>
           <section className="metric-select">
             {Object.entries(METRICS).map(([key, { label }]) => (

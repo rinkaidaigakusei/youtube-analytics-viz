@@ -1,12 +1,13 @@
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 
 from ..config import settings
+from ..security import require_app_key
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -40,7 +41,9 @@ def _token_path() -> Path:
     return path
 
 
-@router.get("/login")
+# ブラウザで直接開けるGETのままだと合言葉を付けられず、誰でも自分のGoogleアカウントで
+# ログインし直してトークンを上書きできてしまう。合言葉付きのPOSTで認可URLを受け取る形にする。
+@router.post("/login", dependencies=[Depends(require_app_key)])
 def login():
     flow = Flow.from_client_config(_client_config(), scopes=SCOPES, redirect_uri=settings.google_redirect_uri)
     auth_url, state = flow.authorization_url(
@@ -49,14 +52,14 @@ def login():
         prompt="consent",
     )
     _pending_code_verifiers[state] = flow.code_verifier
-    return RedirectResponse(auth_url)
+    return {"auth_url": auth_url}
 
 
 @router.get("/callback")
 def callback(code: str, state: str):
     code_verifier = _pending_code_verifiers.pop(state, None)
     if code_verifier is None:
-        raise HTTPException(status_code=400, detail="Unknown or expired OAuth state. Please try /auth/login again.")
+        raise HTTPException(status_code=400, detail="Unknown or expired OAuth state. Please start the login again from the app.")
 
     flow = Flow.from_client_config(
         _client_config(),
@@ -78,7 +81,7 @@ def status():
 def load_credentials() -> Credentials:
     token_path = _token_path()
     if not token_path.exists():
-        raise HTTPException(status_code=401, detail="Not authenticated. Visit /auth/login first.")
+        raise HTTPException(status_code=401, detail="Not authenticated. Log in with Google from the app first.")
 
     creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
     if creds.expired and creds.refresh_token:

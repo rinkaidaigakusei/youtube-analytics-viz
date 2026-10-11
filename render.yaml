@@ -17,5 +17,7 @@ services:
         sync: false
       - key: POST_LOGIN_REDIRECT_URL
         sync: false
+      - key: APP_PASSWORD
+        sync: false
       - key: TIMEZONE
         value: Asia/Tokyo

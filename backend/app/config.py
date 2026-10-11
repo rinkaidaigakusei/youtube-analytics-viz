@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     token_file: str = "data/token.json"
     db_file: str = "data/cache.db"
     timezone: str = "Asia/Tokyo"
+    # APIを使うための合言葉。未設定だとAPIは全リクエストを拒否する(security.py)
+    app_password: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

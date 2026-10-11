@@ -2,14 +2,15 @@ from collections import defaultdict
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
 from ..config import settings
 from ..db import get_db
+from ..security import require_app_key
 from ..services import cache
 from .auth import load_credentials
 
-router = APIRouter(prefix="/api", tags=["analytics"])
+router = APIRouter(prefix="/api", tags=["analytics"], dependencies=[Depends(require_app_key)])
 
 WEEKDAY_LABELS = ["月", "火", "水", "木", "金", "土", "日"]
 

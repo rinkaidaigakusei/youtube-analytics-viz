@@ -5,8 +5,36 @@ const SNAPSHOTS_URL =
   import.meta.env.VITE_SNAPSHOTS_URL ||
   "https://raw.githubusercontent.com/rinkaidaigakusei/youtube-analytics-viz/data/snapshots.json";
 
-async function request(path, options) {
-  const res = await fetch(`${API_BASE_URL}${path}`, options);
+// 合言葉はこの端末のブラウザにだけ保存する(保存できない環境でも、開いている間は使える)
+const APP_KEY_STORAGE = "ytviz-app-key";
+let appKey = null;
+try {
+  appKey = localStorage.getItem(APP_KEY_STORAGE);
+} catch {
+  // プライベートウィンドウなど
+}
+
+function setAppKey(value) {
+  appKey = value;
+  try {
+    if (value) localStorage.setItem(APP_KEY_STORAGE, value);
+    else localStorage.removeItem(APP_KEY_STORAGE);
+  } catch {
+    // 保存できなくても続行
+  }
+}
+
+/** 合言葉が未入力・誤りのときに投げる。画面側は入力欄を出す */
+export class AppKeyError extends Error {}
+
+async function request(path, options = {}) {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: { ...options.headers, ...(appKey ? { Authorization: `Bearer ${appKey}` } : {}) },
+  });
+  if (res.status === 403) {
+    throw new AppKeyError("合言葉が違います。");
+  }
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
     throw new Error(`${path} failed: ${res.status} ${detail}`);
@@ -16,7 +44,17 @@ async function request(path, options) {
 
 export const api = {
   baseUrl: API_BASE_URL,
-  loginUrl: `${API_BASE_URL}/auth/login`,
+  hasAppKey: () => Boolean(appKey),
+  /** 入力済みの合言葉をクリップボードにコピーする(別の端末に入力するときや控えを取るとき用) */
+  copyAppKey: () => navigator.clipboard.writeText(appKey ?? ""),
+  setAppKey,
+  /** 合言葉が正しければ何も起きず、違えば AppKeyError を投げる */
+  checkAppKey: () => request("/api/session"),
+  /** Googleの認可画面へ移動する */
+  startLogin: async () => {
+    const { auth_url } = await request("/auth/login", { method: "POST" });
+    window.location.href = auth_url;
+  },
   authStatus: () => request("/auth/status"),
   videos: () => request("/api/videos"),
   dailyViews: (videoId) => request(`/api/videos/${videoId}/daily-views`),

@@ -1,6 +1,26 @@
 import { useState } from "react";
 import { api } from "../api";
 
+function CopyAppKeyButton() {
+  const [label, setLabel] = useState("合言葉をコピー");
+
+  async function handleCopy() {
+    try {
+      await api.copyAppKey();
+      setLabel("コピーしました");
+    } catch {
+      setLabel("コピーできませんでした");
+    }
+    setTimeout(() => setLabel("合言葉をコピー"), 2000);
+  }
+
+  return (
+    <button className="link-button sync-bar-end" onClick={handleCopy}>
+      {label}
+    </button>
+  );
+}
+
 export default function SyncBar({ authenticated, onSynced }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -23,13 +43,25 @@ export default function SyncBar({ authenticated, onSynced }) {
     }
   }
 
+  async function handleLogin() {
+    setBusy(true);
+    try {
+      await api.startLogin();
+    } catch (err) {
+      setMessage(`エラー: ${err.message}`);
+      setBusy(false);
+    }
+  }
+
   if (!authenticated) {
     return (
       <div className="sync-bar">
         <span>未認証です。まずGoogleアカウントでログインしてください。</span>
-        <a className="button" href={api.loginUrl}>
+        <button className="button" onClick={handleLogin} disabled={busy}>
           Googleでログイン
-        </a>
+        </button>
+        {message && <span className="sync-message">{message}</span>}
+        <CopyAppKeyButton />
       </div>
     );
   }
@@ -41,6 +73,7 @@ export default function SyncBar({ authenticated, onSynced }) {
         {busy ? "同期中..." : "動画・Analyticsを同期"}
       </button>
       {message && <span className="sync-message">{message}</span>}
+      <CopyAppKeyButton />
     </div>
   );
 }

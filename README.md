@@ -56,12 +56,15 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-`.env` を開き、Google Cloud Consoleで発行した値を入力する:
+`.env` を開き、Google Cloud Consoleで発行した値と、APIを使うための合言葉を入力する:
 
 ```
 GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=xxxxx
+APP_PASSWORD=長くて推測されにくい文字列
 ```
+
+`APP_PASSWORD` が未設定だと、APIは全リクエストを拒否する(503)。
 
 サーバー起動:
 
@@ -69,19 +72,20 @@ GOOGLE_CLIENT_SECRET=xxxxx
 uvicorn app.main:app --reload --port 8000
 ```
 
-ブラウザで `http://localhost:8000/auth/login` にアクセスして、Googleアカウントでログイン・認可する(初回のみ)。認可が成功すると `backend/data/token.json` にトークンが保存される(このファイルは`.gitignore`済みで絶対にコミットされない)。
+フロントエンドを開いて合言葉を入力し、「Googleでログイン」を押して認可する(初回のみ)。認可が成功すると `backend/data/token.json` にトークンが保存される(このファイルは`.gitignore`済みで絶対にコミットされない)。
 
 データ取得(初回・以降は差分のみ):
 
 ```bash
-curl -X POST http://localhost:8000/api/sync/videos      # 動画一覧を取得
-curl -X POST http://localhost:8000/api/sync/analytics    # 各動画のAnalyticsデータを取得(キャッシュ済みはスキップ)
+# /api/ 以下はすべて合言葉が必要(Authorization: Bearer <APP_PASSWORD>)
+curl -X POST -H "Authorization: Bearer $APP_PASSWORD" http://localhost:8000/api/sync/videos      # 動画一覧を取得
+curl -X POST -H "Authorization: Bearer $APP_PASSWORD" http://localhost:8000/api/sync/analytics    # 各動画のAnalyticsデータを取得
 ```
 
 集計結果の確認:
 
 ```bash
-curl http://localhost:8000/api/summary/weekday-hour
+curl -H "Authorization: Bearer $APP_PASSWORD" http://localhost:8000/api/summary/weekday-hour
 ```
 
 ### 3. フロントエンド(React / Vite)
@@ -119,11 +123,14 @@ YouTube Analytics APIは日別の値しか返さないため、公開直後の�
 
 ## API エンドポイント一覧(backend)
 
+`/api/` 以下と `POST /auth/login` は、`Authorization: Bearer <APP_PASSWORD>` ヘッダーが無いと 403 を返す。
+
 | Method | Path | 説明 |
 |---|---|---|
-| GET | `/auth/login` | Google OAuth認可画面へリダイレクト |
+| POST | `/auth/login` | Google OAuth認可画面のURLを返す(合言葉が必要) |
 | GET | `/auth/callback` | OAuthコールバック(トークン保存) |
 | GET | `/auth/status` | 認証済みかどうか |
+| GET | `/api/session` | 合言葉が正しいかの確認用 |
 | POST | `/api/sync/videos` | 動画一覧をYouTube Data APIから取得しキャッシュ |
 | GET | `/api/videos` | キャッシュ済み動画一覧を返す |
 | POST | `/api/sync/analytics?force=false` | 各動画のAnalyticsデータ(日別の再生数・再生時間など)を取得しキャッシュ。6時間以内に取得済みの動画はスキップ(`force=true`で再取得) |
@@ -146,11 +153,12 @@ YouTube Analytics APIは日別の値しか返さないため、公開直後の�
 [render.yaml](render.yaml) を使ったBlueprintデプロイに対応しています。
 
 1. Renderで「New +」→「Blueprint」→ このリポジトリを選択
-2. 環境変数(`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` / `FRONTEND_ORIGIN`)を入力
+2. 環境変数(`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` / `FRONTEND_ORIGIN` / `APP_PASSWORD`)を入力
+   - `APP_PASSWORD`: APIを使うための合言葉。公開URLで動くので必ず設定する
    - `GOOGLE_REDIRECT_URI`: `https://<デプロイ先のURL>/auth/callback`
    - `FRONTEND_ORIGIN`: `https://<GitHubユーザー名>.github.io`(GitHub Pagesのオリジン。ローカルも試すなら`http://localhost:5173,https://<GitHubユーザー名>.github.io`のようにカンマ区切りで併記)
 3. Google Cloud Console の OAuthクライアント設定で「承認済みのリダイレクトURI」に本番の`GOOGLE_REDIRECT_URI`を追加
-4. デプロイ後、ブラウザで `https://<デプロイ先のURL>/auth/login` にアクセスして一度だけログインしておく
+4. デプロイ後、フロントエンドを開いて合言葉を入力し、「Googleでログイン」を押してログインしておく
 
 **注意(無料プランの制約)**: Renderの無料プランはディスクが永続化されないため、再デプロイのたびに`token.json`(認証情報)と`cache.db`(キャッシュ)が消え、再ログイン・再同期が必要になる。個人利用でたまにしか再デプロイしないなら実用上問題ないが、頻繁に再デプロイする場合はRenderの永続ディスク(有料)を検討すること。**Vercelのサーバーレス関数はリクエストごとにファイルシステムがリセットされるため、このアプリのファイルベースのトークン/キャッシュ保存方式とは相性が悪く非推奨。**
 

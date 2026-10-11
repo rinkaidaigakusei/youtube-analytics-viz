@@ -1,11 +1,12 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from ..db import get_db
+from ..security import require_app_key
 from ..services import cache, youtube_comments
 from .auth import load_credentials
 
-router = APIRouter(prefix="/api", tags=["comments"])
+router = APIRouter(prefix="/api", tags=["comments"], dependencies=[Depends(require_app_key)])
 
 
 class ReplyRequest(BaseModel):
