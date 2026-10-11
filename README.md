@@ -6,7 +6,7 @@
 - Shorts / 横動画をフォーマット別に分けた再生数グラフ
 - 未返信コメントの一覧表示・アプリ上からの返信投稿
 - 動画一覧を公開日時でソート/フィルタできるテーブル
-- 公開後24時間の再生数を動画どうしで比較できる折れ線グラフ(20分おきに自動記録)
+- 公開後24時間の再生数を動画どうしで比較できる折れ線グラフ(定期的に自動記録)
 - 横動画の総再生時間(累計)を、公開からの日数で動画どうしで比較できる折れ線グラフ
 - 取得したデータはローカル(SQLite)にキャッシュし、APIクォータを節約
 
@@ -98,7 +98,7 @@ npm run dev
 
 YouTube Analytics APIは日別の値しか返さないため、公開直後の時間単位の伸びは「その時点の再生数」を定期的に記録して作っています。
 
-- [.github/workflows/collect-snapshots.yml](.github/workflows/collect-snapshots.yml) が20分おきに [collector/collect_snapshots.py](collector/collect_snapshots.py) を実行し、公開から24時間以内の動画の再生数を `data` ブランチの `snapshots.json` に追記する(対象の動画が無いときは何もコミットしない)
+- [.github/workflows/collect-snapshots.yml](.github/workflows/collect-snapshots.yml) が定期的に(5分おき指定。GitHubの都合で実際の間隔は長くなる) [collector/collect_snapshots.py](collector/collect_snapshots.py) を実行し、公開から24時間以内の動画の再生数を `data` ブランチの `snapshots.json` に追記する(対象の動画が無いときは何もコミットしない)
 - フロントエンドはその `snapshots.json` を直接読み込んでグラフにする(バックエンドは経由しない)
 - **記録を始める前に投稿した動画は、時間単位のデータが存在しないため表示できない**
 

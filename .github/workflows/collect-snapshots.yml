@@ -1,10 +1,12 @@
 name: Collect first-24h view snapshots
 
-# 公開後24時間以内の動画の再生数を20分おきに記録し、dataブランチの snapshots.json に追記する。
+# 公開後24時間以内の動画の再生数を記録し、dataブランチの snapshots.json に追記する。
 # 追跡対象の動画が無いときは何もコミットしない。
+# GitHubの定期実行は大きく遅れたり間引かれたりする(20分おき指定で実際は約3時間おきだった)ため、
+# 細かい間隔で指定して実際の記録間隔を縮めている。
 on:
   schedule:
-    - cron: "7,27,47 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 permissions:
