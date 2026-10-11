@@ -201,17 +201,17 @@ export default function FirstDayChart() {
             <tbody>
               {selected.map(({ video, series, slot }) => (
                 <tr key={video.video_id}>
-                  <td>
+                  <td className="cell-title">
                     <span className="series-key" style={{ background: seriesColor(slot) }} />
                     <a href={`https://www.youtube.com/watch?v=${video.video_id}`} target="_blank" rel="noreferrer">
                       {video.title}
                     </a>
                   </td>
-                  <td>{formatPublished(video.published_at)}</td>
+                  <td data-label="公開日時">{formatPublished(video.published_at)}</td>
                   {MILESTONE_HOURS.map((h) => {
                     const value = viewsAt(series, h);
                     return (
-                      <td key={h} className="num">
+                      <td key={h} className="num" data-label={`${h}時間後`}>
                         {value === null ? "–" : value.toLocaleString()}
                       </td>
                     );

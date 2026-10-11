@@ -69,6 +69,20 @@ export default function VideoTable({ videos }) {
             ))}
           </select>
         </label>
+        <label className="only-mobile">
+          並び替え:{" "}
+          <select
+            value={sortKey}
+            onChange={(e) => {
+              setSortKey(e.target.value);
+              setSortDir("desc");
+            }}
+          >
+            <option value="published_at">新しい順</option>
+            <option value="lifetime_views">再生数が多い順</option>
+            <option value="average_view_percentage">視聴維持率が高い順</option>
+          </select>
+        </label>
         <span className="video-table-count">{sorted.length}件</span>
       </div>
       <div className="video-table-scroll">
@@ -86,8 +100,8 @@ export default function VideoTable({ videos }) {
           <tbody>
             {sorted.map((v) => (
               <tr key={v.video_id}>
-                <td>{formatDate(v.published_at)}</td>
-                <td>
+                <td data-label="公開日時">{formatDate(v.published_at)}</td>
+                <td className="cell-title">
                   <a
                     href={`https://www.youtube.com/watch?v=${v.video_id}`}
                     target="_blank"
@@ -96,9 +110,9 @@ export default function VideoTable({ videos }) {
                     {v.title}
                   </a>
                 </td>
-                <td>{WEEKDAYS[v.weekday]}</td>
-                <td>{v.lifetime_views ?? "-"}</td>
-                <td>{v.average_view_percentage != null ? `${v.average_view_percentage.toFixed(1)}%` : "-"}</td>
+                <td data-label="曜日">{WEEKDAYS[v.weekday]}</td>
+                <td data-label="累計再生数">{v.lifetime_views ?? "-"}</td>
+                <td data-label="視聴維持率">{v.average_view_percentage != null ? `${v.average_view_percentage.toFixed(1)}%` : "-"}</td>
               </tr>
             ))}
           </tbody>

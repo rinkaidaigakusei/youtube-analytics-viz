@@ -195,19 +195,21 @@ export default function WatchTimeChart({ videos: syncedVideos }) {
             <tbody>
               {selected.map(({ video, cumulative, slot }) => (
                 <tr key={video.video_id}>
-                  <td>
+                  <td className="cell-title">
                     <span className="series-key" style={{ background: seriesColor(slot) }} />
                     <a href={`https://www.youtube.com/watch?v=${video.video_id}`} target="_blank" rel="noreferrer">
                       {video.title}
                     </a>
                   </td>
-                  <td>{formatPublished(video.published_at)}</td>
+                  <td data-label="公開日時">{formatPublished(video.published_at)}</td>
                   {MILESTONE_DAYS.map((d) => (
-                    <td key={d} className="num">
+                    <td key={d} className="num" data-label={`${d}日目まで`}>
                       {cumulative[d] === undefined ? "–" : formatHours(cumulative[d])}
                     </td>
                   ))}
-                  <td className="num">{formatHours(cumulative[cumulative.length - 1] ?? 0)}</td>
+                  <td className="num" data-label="現在までの累計">
+                    {formatHours(cumulative[cumulative.length - 1] ?? 0)}
+                  </td>
                 </tr>
               ))}
             </tbody>

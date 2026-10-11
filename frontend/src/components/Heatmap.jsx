@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 
 const WEEKDAYS = ["月", "火", "水", "木", "金", "土", "日"];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -26,12 +26,16 @@ export default function Heatmap({ data, metric }) {
   const max = values.length ? Math.max(...values) : 0;
 
   const { format, label } = METRICS[metric];
+  // タッチ端末ではマウスオーバーが使えないので、タップしたセルの詳細を下に出す
+  const [selectedKey, setSelectedKey] = useState(null);
+  const selectedCell = selectedKey ? cellMap.get(selectedKey) : null;
+  const selectedValue = selectedCell ? selectedCell[metric] : null;
 
   return (
     <div className="heatmap-wrap">
       <h3>{label}</h3>
       <div className="heatmap-scroll">
-        <div className="heatmap-grid" style={{ gridTemplateColumns: `48px repeat(24, 1fr)` }}>
+        <div className="heatmap-grid">
           <div className="heatmap-corner" />
           {HOURS.map((h) => (
             <div key={`h-${h}`} className="heatmap-hour-label">
@@ -48,8 +52,9 @@ export default function Heatmap({ data, metric }) {
                 return (
                   <div
                     key={`${weekday}-${hour}`}
-                    className="heatmap-cell"
+                    className={selectedKey === `${weekday}-${hour}` ? "heatmap-cell selected" : "heatmap-cell"}
                     style={{ background: colorFor(ratio) }}
+                    onClick={() => setSelectedKey(`${weekday}-${hour}`)}
                     title={
                       cell
                         ? `${wLabel}曜 ${hour}時\n投稿本数: ${cell.video_count}\n${
@@ -66,7 +71,21 @@ export default function Heatmap({ data, metric }) {
           ))}
         </div>
       </div>
-      <p className="heatmap-hint">セル内の数字は投稿本数。色が濃いほど数値が高いことを示す。マウスオーバーで詳細表示。</p>
+      {selectedKey && (
+        <p className="heatmap-detail">
+          {WEEKDAYS[Number(selectedKey.split("-")[0])]}曜 {selectedKey.split("-")[1]}時:{" "}
+          {selectedCell
+            ? `投稿${selectedCell.video_count}本 / ${
+                selectedValue !== null && selectedValue !== undefined ? format(selectedValue) : "データなし"
+              }`
+            : "投稿なし"}
+        </p>
+      )}
+      <p className="heatmap-hint">
+        セル内の数字は投稿本数。色が濃いほど数値が高いことを示す。
+        <span className="only-desktop">マウスオーバーで詳細表示。</span>
+        <span className="only-mobile">セルをタップすると詳細を表示。</span>
+      </p>
     </div>
   );
 }

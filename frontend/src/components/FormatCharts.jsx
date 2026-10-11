@@ -1,4 +1,5 @@
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useIsMobile } from "../useIsMobile";
 
 const COLORS = { short: "#7f77dd", landscape: "#1d9e75" };
 
@@ -7,11 +8,17 @@ function truncate(title, max = 28) {
 }
 
 function FormatBarChart({ videos, color }) {
+  const isMobile = useIsMobile();
   const data = [...videos]
     .filter((v) => v.lifetime_views !== null && v.lifetime_views !== undefined)
     .sort((a, b) => b.lifetime_views - a.lifetime_views)
     .slice(0, 15)
-    .map((v) => ({ title: truncate(v.title), fullTitle: v.title, views: v.lifetime_views }));
+    .map((v) => ({
+      // スマホは軸が狭いので、どの動画にも付いている先頭の【…】を外してから切り詰める
+      title: isMobile ? truncate(v.title.replace(/^【[^】]*】\s*/, "") || v.title, 9) : truncate(v.title),
+      fullTitle: v.title,
+      views: v.lifetime_views,
+    }));
 
   if (data.length === 0) {
     return <p>データがありません。</p>;
@@ -25,7 +32,7 @@ function FormatBarChart({ videos, color }) {
         <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24, top: 8, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" horizontal={false} />
           <XAxis type="number" tick={{ fontSize: 12 }} />
-          <YAxis type="category" dataKey="title" width={180} tick={{ fontSize: 12 }} />
+          <YAxis type="category" dataKey="title" width={isMobile ? 112 : 180} tick={{ fontSize: isMobile ? 11 : 12 }} />
           <Tooltip
             formatter={(value) => [value.toLocaleString(), "累計再生数"]}
             labelFormatter={(_, payload) => payload?.[0]?.payload?.fullTitle ?? ""}

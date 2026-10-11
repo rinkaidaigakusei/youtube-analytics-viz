@@ -512,3 +512,179 @@
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
+/* --- Phone layout (desktop stays as is; keep the width in sync with useIsMobile.js) --- */
+.only-mobile {
+  display: none;
+}
+
+.heatmap-grid {
+  grid-template-columns: 48px repeat(24, 1fr);
+}
+
+.heatmap-cell.selected {
+  outline: 2px solid var(--text-h);
+  outline-offset: -2px;
+}
+
+.heatmap-detail {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+@media (max-width: 640px) {
+  .only-mobile {
+    display: revert;
+  }
+
+  .only-desktop {
+    display: none;
+  }
+
+  .app {
+    padding: 16px 14px 48px;
+    gap: 24px;
+  }
+
+  .app-header h1 {
+    font-size: 26px;
+    margin: 8px 0 4px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .sync-bar {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .button {
+    min-height: 40px;
+  }
+
+  .metric-button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  /* 動画の選択ボタンは折り返さず、横スクロールの1行にして縦の場所を取らない */
+  .series-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: -14px;
+    padding: 2px 14px 8px;
+  }
+
+  .series-chip {
+    flex-shrink: 0;
+    padding: 8px 12px;
+  }
+
+  .series-chip-title {
+    max-width: 170px;
+  }
+
+  .chart-tooltip {
+    max-width: 74vw;
+    font-size: 12px;
+  }
+
+  .format-charts {
+    grid-template-columns: 1fr;
+  }
+
+  /* ヒートマップは縦長の画面に合わせて転置する(横=曜日、縦=時間) */
+  .heatmap-grid {
+    min-width: 0;
+    grid-auto-flow: column;
+    grid-template-columns: 30px repeat(7, 1fr);
+    grid-template-rows: repeat(25, auto);
+  }
+
+  .heatmap-cell {
+    aspect-ratio: auto;
+    height: 24px;
+    min-height: 0;
+  }
+
+  /* 表は1行=1枚のカードにして、横スクロールなしで読めるようにする */
+  .video-table thead {
+    display: none;
+  }
+
+  .video-table,
+  .video-table tbody,
+  .video-table td {
+    display: block;
+  }
+
+  .video-table tr {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 12px;
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .video-table.series-table tr {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .video-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .video-table th,
+  .video-table td {
+    padding: 0;
+    border-bottom: 0;
+    white-space: normal;
+  }
+
+  .video-table td.cell-title {
+    order: -1;
+    grid-column: 1 / -1;
+    max-width: none;
+    color: var(--text-h);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .video-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text);
+  }
+
+  .series-table .num {
+    text-align: left;
+  }
+
+  .video-table-controls {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+
+  .comments-panel-header {
+    flex-wrap: wrap;
+  }
+
+  .comment-reply-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .best-times-item {
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+
+  .growth-chart-select {
+    box-sizing: border-box;
+  }
+}
