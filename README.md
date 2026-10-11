@@ -153,14 +153,15 @@ YouTube Analytics APIは日別の値しか返さないため、公開直後の�
 [render.yaml](render.yaml) を使ったBlueprintデプロイに対応しています。
 
 1. Renderで「New +」→「Blueprint」→ このリポジトリを選択
-2. 環境変数(`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` / `FRONTEND_ORIGIN` / `APP_PASSWORD`)を入力
+2. 環境変数(`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` / `FRONTEND_ORIGIN` / `APP_PASSWORD` / `DATABASE_URL`)を入力
    - `APP_PASSWORD`: APIを使うための合言葉。公開URLで動くので必ず設定する
+   - `DATABASE_URL`: トークンとキャッシュの控えを置くPostgresの接続文字列(下の「無料プランの制約」を参照)
    - `GOOGLE_REDIRECT_URI`: `https://<デプロイ先のURL>/auth/callback`
    - `FRONTEND_ORIGIN`: `https://<GitHubユーザー名>.github.io`(GitHub Pagesのオリジン。ローカルも試すなら`http://localhost:5173,https://<GitHubユーザー名>.github.io`のようにカンマ区切りで併記)
 3. Google Cloud Console の OAuthクライアント設定で「承認済みのリダイレクトURI」に本番の`GOOGLE_REDIRECT_URI`を追加
 4. デプロイ後、フロントエンドを開いて合言葉を入力し、「Googleでログイン」を押してログインしておく
 
-**注意(無料プランの制約)**: Renderの無料プランはディスクが永続化されないため、再デプロイのたびに`token.json`(認証情報)と`cache.db`(キャッシュ)が消え、再ログイン・再同期が必要になる。個人利用でたまにしか再デプロイしないなら実用上問題ないが、頻繁に再デプロイする場合はRenderの永続ディスク(有料)を検討すること。**Vercelのサーバーレス関数はリクエストごとにファイルシステムがリセットされるため、このアプリのファイルベースのトークン/キャッシュ保存方式とは相性が悪く非推奨。**
+**無料プランの制約と `DATABASE_URL`**: Renderの無料プランはディスクが永続化されず、再デプロイだけでなく**休止からの復帰でも** `token.json`(認証情報)と `cache.db`(キャッシュ)が消える。そのため、[Neon](https://neon.tech) などの無料Postgresを用意して接続文字列を `DATABASE_URL` に設定する。設定すると、ログイン時・同期時・コメント返信時に2つのファイルの控えをPostgresに保存し、起動時に復元する([backend/app/services/persist.py](backend/app/services/persist.py))。未設定の場合は、サーバーが休止するたびに再ログイン・再同期が必要になる。**Vercelのサーバーレス関数はリクエストごとにファイルシステムがリセットされるため、このアプリのファイルベースのトークン/キャッシュ保存方式とは相性が悪く非推奨。**
 
 ## 今後のTODO
 

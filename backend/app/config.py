@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     timezone: str = "Asia/Tokyo"
     # APIを使うための合言葉。未設定だとAPIは全リクエストを拒否する(security.py)
     app_password: str = ""
+    # トークンとキャッシュDBの控えを置くPostgresの接続文字列(services/persist.py)。未設定なら控えは取らない
+    database_url: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

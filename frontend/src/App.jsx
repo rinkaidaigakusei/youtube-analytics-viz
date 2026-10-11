@@ -24,6 +24,8 @@ export default function App() {
   const [error, setError] = useState(null);
   // サーバーの合言葉が未入力・誤りのあいだは、入力欄だけを出す
   const [locked, setLocked] = useState(!api.hasAppKey());
+  // サーバーが控えの保存先(外部DB)に接続できていない
+  const [storageFailed, setStorageFailed] = useState(false);
   // 公開後24時間の記録(null = 読み込み中)。バックエンドとは別の場所から読む
   const [snapshotVideos, setSnapshotVideos] = useState(null);
   const [snapshotError, setSnapshotError] = useState(null);
@@ -40,6 +42,7 @@ export default function App() {
       setLocked(false);
       const status = await api.authStatus();
       setAuthenticated(status.authenticated);
+      setStorageFailed(status.storage_ok === false);
       if (status.authenticated) {
         const [videoList, summaryList, commentList] = await Promise.all([
           api.videos(),
@@ -119,6 +122,11 @@ export default function App() {
         />
       </section>
 
+      {storageFailed && (
+        <p className="error-banner">
+          サーバーが保存先のデータベースに接続できていません。このままだと、サーバーの休止時にログインとデータが消えます。
+        </p>
+      )}
       {error && <p className="error-banner">エラー: {error}</p>}
       {loading && <p>読み込み中...</p>}
 

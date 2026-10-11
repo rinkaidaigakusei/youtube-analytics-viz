@@ -7,3 +7,4 @@ pydantic-settings>=2.5,<3
 isodate>=0.6,<0.7
 tzdata>=2024.1  # required for zoneinfo on Windows, which ships no tz database
 requests>=2.32,<3
+psycopg[binary]>=3.2,<4  # DATABASE_URL(トークン・キャッシュの控え)を使うときだけ必要

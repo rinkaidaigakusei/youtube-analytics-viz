@@ -8,6 +8,7 @@ from google_auth_oauthlib.flow import Flow
 
 from ..config import settings
 from ..security import require_app_key
+from ..services import persist
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -70,12 +71,14 @@ def callback(code: str, state: str):
     flow.fetch_token(code=code)
     creds = flow.credentials
     _token_path().write_text(creds.to_json(), encoding="utf-8")
+    persist.save("token")
     return RedirectResponse(settings.post_login_redirect_url)
 
 
 @router.get("/status")
 def status():
-    return {"authenticated": _token_path().exists()}
+    # storage_ok: 控えの保存先が使えているか(未設定なら null)。false のときは画面で警告する
+    return {"authenticated": _token_path().exists(), "storage_ok": persist.storage_ok()}
 
 
 def load_credentials() -> Credentials:
@@ -87,4 +90,5 @@ def load_credentials() -> Credentials:
     if creds.expired and creds.refresh_token:
         creds.refresh(GoogleRequest())
         token_path.write_text(creds.to_json(), encoding="utf-8")
+        persist.save("token")
     return creds
