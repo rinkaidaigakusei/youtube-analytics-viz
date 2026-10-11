@@ -802,3 +802,12 @@
 .sync-bar-end {
   margin-left: auto;
 }
+
+/* --- Footer --- */
+.app-footer {
+  font-size: 13px;
+}
+
+.app-footer a {
+  color: var(--text);
+}

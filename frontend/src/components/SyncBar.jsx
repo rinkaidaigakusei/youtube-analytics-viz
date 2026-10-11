@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { api } from "../api";
 
-function CopyAppKeyButton() {
+function CopyAppKeyButton({ className = "link-button sync-bar-end" }) {
   const [label, setLabel] = useState("合言葉をコピー");
 
   async function handleCopy() {
@@ -15,7 +15,7 @@ function CopyAppKeyButton() {
   }
 
   return (
-    <button className="link-button sync-bar-end" onClick={handleCopy}>
+    <button className={className} onClick={handleCopy}>
       {label}
     </button>
   );
@@ -73,7 +73,11 @@ export default function SyncBar({ authenticated, onSynced }) {
         {busy ? "同期中..." : "動画・Analyticsを同期"}
       </button>
       {message && <span className="sync-message">{message}</span>}
-      <CopyAppKeyButton />
+      {/* ログインが切れかけているときや、別のアカウントに切り替えたいとき用 */}
+      <button className="link-button sync-bar-end" onClick={handleLogin} disabled={busy}>
+        Googleに再ログイン
+      </button>
+      <CopyAppKeyButton className="link-button" />
     </div>
   );
 }

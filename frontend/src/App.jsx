@@ -185,6 +185,10 @@ export default function App() {
           </section>
         </>
       )}
+
+      <footer className="app-footer">
+        <a href="privacy.html">プライバシーポリシー</a>
+      </footer>
     </div>
   );
 }
